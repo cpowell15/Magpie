@@ -30,39 +30,39 @@ public class Magpie
    */
   public String getResponse(String statement)
   {
-  String response = "";
-  if (statement.length() == 0)
-  {
-   response = "Being silent doesn't help anybody.";
-  }
-  else if (findKeyword(statement, "no") >= 0)
-  {
-   response = "Why so negative?";
-  }
-  else if (findKeyword(statement, "mother") >= 0
-    || findKeyword(statement, "father") >= 0
-    || findKeyword(statement, "sister") >= 0
-    || findKeyword(statement, "brother") >= 0)
-  {
-   response = "Tell me more about your family.";
-  }
-  else if (findKeyword(statement, "dog") >= 0
-    || findKeyword(statement, "cat") >= 0)
-  {
-   response = "Tell me more about your pets.";
-  }
-  else if (findKeyword(statement, "kiang") >= 0
-    || findKeyword(statement, "landgraf") >= 0)
-  {
-   response = "He sounds like the best teacher that ever lived.";
-  }
-  else if (findKeyword(statement, "hungry") >= 0)
+    String response = "";
+    if (statement.length() == 0)
+    {
+      response = "Being silent doesn't help anybody.";
+    }
+    else if (findKeyword(statement, "no") >= 0)
+    {
+      response = "Why so negative?";
+    }
+    else if (findKeyword(statement, "mother") >= 0
+               || findKeyword(statement, "father") >= 0
+               || findKeyword(statement, "sister") >= 0
+               || findKeyword(statement, "brother") >= 0)
+    {
+      response = "Tell me more about your family.";
+    }
+    else if (findKeyword(statement, "dog") >= 0
+               || findKeyword(statement, "cat") >= 0)
+    {
+      response = "Tell me more about your pets.";
+    }
+    else if (findKeyword(statement, "kiang") >= 0
+               || findKeyword(statement, "landgraf") >= 0)
+    {
+      response = "He sounds like the best teacher that ever lived.";
+    }
+    else if (findKeyword(statement, "hungry") >= 0)
     {
       response = "Wow I really want food.";
     }
     else if (findKeyword(statement, "stress") >= 0
-    || findKeyword(statement, "stressful") >= 0
-    || findKeyword(statement, "stressed") >= 0)
+               || findKeyword(statement, "stressful") >= 0
+               || findKeyword(statement, "stressed") >= 0)
     {
       response = "I'm sorry, you ought to not be that stressed.";
     }
@@ -70,68 +70,157 @@ public class Magpie
     {
       response = "Heh. Casual.";
     }
-  else
-  {
-   response = getRandomResponse();
+    
+    else if (findKeyword(statement, "I want to", 0) >= 0)
+    {
+      response = transformIWantToStatement(statement);
+    }
+    
+    else if (findKeyword(statement, "I want", 0) >= 0)
+    {
+      response = transformIWantStatement(statement);
+    }
+    
+    else
+    {
+      // Look for a two word (you <something> me)
+      // pattern
+      int psn = findKeyword(statement, "you", 0);
+      
+      if (psn >= 0
+            && findKeyword(statement, "me", psn) >= 0)
+      {
+        response = transformYouMeStatement(statement);
+      }
+      
+      else
+      {
+        int psm = findKeyword(statement, "i", 0);
+        
+        if (psm >= 0
+              && findKeyword(statement, "you", psm) >= 0)
+        {
+          response = transformIYouStatement(statement);
+        }
+        
+        else
+        {
+          response = getRandomResponse();
+        }
+      }
+    }
+    return response;
   }
-  return response;
- }
-
-   private int findKeyword(String statement, String goal,
-   int startPos)
- {
-  String phrase = statement.trim();
-  // The only change to incorporate the startPos is in
-  // the line below
-  int psn = phrase.toLowerCase().indexOf(
-    goal.toLowerCase(), startPos);
-
-  // Refinement--make sure the goal isn't part of a
-  // word
-  while (psn >= 0)
+  
+  private String transformIWantToStatement(String statement)
   {
-   // Find the string of length 1 before and after
-   // the word
-   String before = " ", after = " ";
-   if (psn > 0)
-   {
-    before = phrase.substring(psn - 1, psn)
-      .toLowerCase();
-   }
-   if (psn + goal.length() < phrase.length())
-   {
-    after = phrase.substring(
-      psn + goal.length(),
-      psn + goal.length() + 1)
-      .toLowerCase();
-   }
-
-   // If before and after aren't letters, we've
-   // found the word
-   if (((before.compareTo("a") < 0) || (before
-     .compareTo("z") > 0)) // before is not a
-           // letter
-     && ((after.compareTo("a") < 0) || (after
-       .compareTo("z") > 0)))
-   {
-    return psn;
-   }
-
-   // The last position didn't work, so let's find
-   // the next, if there is one.
-   psn = phrase.indexOf(goal.toLowerCase(),
-     psn + 1);
-
+    //  Remove the final period, if there is one
+    statement = statement.trim();
+    String lastChar = statement.substring(statement.length() - 1);
+    if (lastChar.equals("."))
+    {
+      statement = statement.substring(0, statement.length() - 1);
+    }
+    int psn = findKeyword (statement, "I want to", 0);
+    String restOfStatement = statement.substring(psn + 9).trim();
+    return "What would it mean to " + restOfStatement + "?";
   }
-
-  return -1;
- }
-   
-    private int findKeyword(String statement, String goal)
- {
-  return findKeyword(statement, goal, 0);
- }
-
+  
+  private String transformIWantStatement(String statement)
+  {
+    //  Remove the final period, if there is one
+    statement = statement.trim();
+    String lastChar = statement.substring(statement.length() - 1);
+    if (lastChar.equals("."))
+    {
+      statement = statement.substring(0, statement.length() - 1);
+    }
+    int psn = findKeyword (statement, "I want", 0);
+    String restOfStatement = statement.substring(psn + 6).trim();
+    return "Would you be really happy if you had " + restOfStatement + "?";
+  }
+  
+  private String transformYouMeStatement(String statement)
+  {
+    //  Remove the final period, if there is one
+    statement = statement.trim();
+    String lastChar = statement.substring(statement.length() - 1);
+    if (lastChar.equals("."))
+    {
+      statement = statement.substring(0, statement.length() - 1);
+    }
+    
+    int psnOfYou = findKeyword (statement, "you", 0);
+    int psnOfMe = findKeyword (statement, "me", psnOfYou + 3);
+    
+    String restOfStatement = statement.substring(psnOfYou + 3, psnOfMe).trim();
+    return "What makes you think that I " + restOfStatement + " you?";
+  }
+  
+  private String transformIYouStatement(String statement)
+  {
+    statement = statement.trim();
+    String lastChar = statement.substring(statement.length() - 1);
+    if (lastChar.equals("."))
+    {
+      statement = statement.substring(0, statement.length() - 1);
+    }
+    
+    int psnOfI = findKeyword (statement, "i", 0);
+    int psnOfYou = findKeyword (statement, "you", psnOfI + 1);
+    
+    String restOfStatement = statement.substring(psnOfI + 1, psnOfYou).trim();
+    return "Why do you " + restOfStatement + " me?";
+  }
+  
+  private int findKeyword(String statement, String goal, int startPos)
+  {
+    String phrase = statement.trim();
+    // The only change to incorporate the startPos is in
+    // the line below
+    int psn = phrase.toLowerCase().indexOf(goal.toLowerCase(), startPos);
+    
+    // Refinement--make sure the goal isn't part of a
+    // word
+    while (psn >= 0)
+    {
+      // Find the string of length 1 before and after
+      // the word
+      String before = " ", after = " ";
+      if (psn > 0)
+      {
+        before = phrase.substring(psn - 1, psn)
+          .toLowerCase();
+      }
+      if (psn + goal.length() < phrase.length())
+      {
+        after = phrase.substring(psn + goal.length(), psn + goal.length() + 1)
+          .toLowerCase();
+      }
+      
+      // If before and after aren't letters, we've
+      // found the word
+      if (((before.compareTo("a") < 0) || (before.compareTo("z") > 0)) // before is not a
+            // letter
+            && ((after.compareTo("a") < 0) || (after.compareTo("z") > 0)))
+      {
+        return psn;
+      }
+      
+      // The last position didn't work, so let's find
+      // the next, if there is one.
+      psn = phrase.indexOf(goal.toLowerCase(), psn + 1);
+      
+    }
+    
+    return -1;
+  }
+  
+  private int findKeyword(String statement, String goal)
+  {
+    return findKeyword(statement, goal, 0);
+  }
+  
   private String getRandomResponse()
   {
     final int NUMBER_OF_RESPONSES = 6;
@@ -169,3 +258,4 @@ public class Magpie
     return response;
   }
 }
+
